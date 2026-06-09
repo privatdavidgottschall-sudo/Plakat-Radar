@@ -1,3 +1,4 @@
+# Triggered by ChatGPT to build the latest debug APK.
 name: Build Android APK
 
 on:
