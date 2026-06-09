@@ -3,6 +3,20 @@ from pathlib import Path
 path = Path("app/src/main/java/de/bsw/plakatradar/MainActivity.kt")
 text = path.read_text(encoding="utf-8")
 
+# Make locked actions show the exact requested hint.
+text = text.replace(
+    'if (!AccessPolicy.canSync(ui.local)) return',
+    'if (!AccessPolicy.canSync(ui.local)) { requireTeamQr(); return }'
+)
+text = text.replace(
+    'if (!AccessPolicy.canShareSyncBundle(ui.local)) error("Bitte erst Team-QR-Code nutzen. Ohne Teamzugang gibt es kein Sync-Paket.")',
+    'if (!AccessPolicy.canShareSyncBundle(ui.local)) error("Bitte Teamleiter-QR-Code scannen.")'
+)
+text = text.replace(
+    'if (!AccessPolicy.canSync(ui.local)) error("Bitte erst Team-QR-Code vom Teamleiter scannen.")',
+    'if (!AccessPolicy.canSync(ui.local)) error("Bitte Teamleiter-QR-Code scannen.")'
+)
+
 # Add a QR scanner launcher to HomeScreen.
 old = '''    val syncImportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) vm.importSharedSyncBundle(uri)
@@ -47,11 +61,5 @@ new = old + '''
 if old in text and "Ohne Teamleiter-QR" not in text:
     text = text.replace(old, new)
 
-# Make the app's own warning text exact.
-text = text.replace(
-    'ui = ui.copy(error = "Bitte Teamleiter-QR-Code scannen.")',
-    'ui = ui.copy(error = "Bitte Teamleiter-QR-Code scannen.")'
-)
-
 path.write_text(text, encoding="utf-8")
-print("no QR notice applied")
+print("no QR notice and locked-action hints applied")
