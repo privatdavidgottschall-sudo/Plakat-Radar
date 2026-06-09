@@ -1,4 +1,4 @@
-# Triggered by ChatGPT to build the latest debug APK again.
+# Triggered by ChatGPT to build the latest debug APK with keyboard fixes.
 name: Build Android APK
 
 on:
@@ -54,6 +54,31 @@ jobs:
           text = text.replace(
               '                Button(onClick = { scanner.launch(ScanOptions().setPrompt("QR-Code vom Teamleiter scannen").setBeepEnabled(false)) }, modifier = Modifier.fillMaxWidth().height(64.dp)) { Text("QR-Code scannen") }',
               '                Button(onClick = { closeKeyboard(); scanner.launch(ScanOptions().setPrompt("QR-Code vom Teamleiter scannen").setBeepEnabled(false)) }, modifier = Modifier.fillMaxWidth().height(64.dp)) { Text("QR-Code scannen") }'
+          )
+
+          text = text.replace(
+              '    val context = LocalContext.current\n    var address by remember { mutableStateOf("") }',
+              '    val context = LocalContext.current\n    val focusManager = LocalFocusManager.current\n    fun closeKeyboard() { focusManager.clearFocus(force = true) }\n    var address by remember { mutableStateOf("") }'
+          )
+          text = text.replace(
+              '        OutlinedTextField(address, { address = it }, label = { Text("Standort / Straße") }, modifier = Modifier.fillMaxWidth())',
+              '        OutlinedTextField(\n            value = address,\n            onValueChange = { address = it },\n            label = { Text("Standort / Straße") },\n            modifier = Modifier.fillMaxWidth(),\n            singleLine = true,\n            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),\n            keyboardActions = KeyboardActions(onDone = { closeKeyboard() })\n        )'
+          )
+          text = text.replace(
+              '        OutlinedTextField(note, { note = it }, label = { Text("Bemerkung für Stadtverwaltung") }, modifier = Modifier.fillMaxWidth())',
+              '        OutlinedTextField(\n            value = note,\n            onValueChange = { note = it },\n            label = { Text("Bemerkung für Stadtverwaltung") },\n            modifier = Modifier.fillMaxWidth(),\n            minLines = 2,\n            maxLines = 4,\n            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),\n            keyboardActions = KeyboardActions(onDone = { closeKeyboard() })\n        )'
+          )
+          text = text.replace(
+              '        OutlinedTextField(internal, { internal = it }, label = { Text("Interne Notiz") }, modifier = Modifier.fillMaxWidth())',
+              '        OutlinedTextField(\n            value = internal,\n            onValueChange = { internal = it },\n            label = { Text("Interne Notiz") },\n            modifier = Modifier.fillMaxWidth(),\n            minLines = 2,\n            maxLines = 4,\n            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),\n            keyboardActions = KeyboardActions(onDone = { closeKeyboard() })\n        )'
+          )
+          text = text.replace(
+              '        OutlinedTextField(removalDaysText, { removalDaysText = it.filter { ch -> ch.isDigit() }.take(3) }, label = { Text("Abnahme in Tagen") }, modifier = Modifier.fillMaxWidth())',
+              '        OutlinedTextField(\n            value = removalDaysText,\n            onValueChange = { removalDaysText = it.filter { ch -> ch.isDigit() }.take(3) },\n            label = { Text("Abnahme in Tagen") },\n            modifier = Modifier.fillMaxWidth(),\n            singleLine = true,\n            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),\n            keyboardActions = KeyboardActions(onDone = { closeKeyboard() })\n        )'
+          )
+          text = text.replace(
+              '        Button(onClick = {\n            val fused = LocationServices.getFusedLocationProviderClient(context)',
+              '        Button(onClick = {\n            closeKeyboard()\n            val fused = LocationServices.getFusedLocationProviderClient(context)'
           )
 
           path.write_text(text, encoding="utf-8")
