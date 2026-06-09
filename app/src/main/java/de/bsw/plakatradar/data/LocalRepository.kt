@@ -95,7 +95,13 @@ class LocalRepository(private val context: Context) {
     fun updateStatus(state: LocalTeamState, poster: Poster, newStatus: PosterStatus): LocalTeamState {
         val changed = poster.copy(status = newStatus, updatedAt = Instant.now().toEpochMilli())
         val updated = state.posters.map { if (it.id == poster.id) changed else it }
-        val event = PosterEvent(poster.id, poster.teamId, state.deviceId, state.deviceName, "Status geändert zu ${newStatus.name}")
+        val event = PosterEvent(
+    posterId = poster.id,
+    teamId = poster.teamId,
+    actorDeviceId = state.deviceId,
+    actorName = state.deviceName,
+    action = "Status geändert zu ${newStatus.name}"
+)
         return state.copy(posters = updated, events = listOf(event) + state.events).also(::save)
     }
 
