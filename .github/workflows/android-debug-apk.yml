@@ -1,4 +1,4 @@
-# Triggered by ChatGPT to build the latest debug APK with keyboard and list-removal fixes.
+# Triggered by ChatGPT to build the latest debug APK with keyboard, list-removal and QR timer fixes.
 name: Build Android APK
 
 on:
@@ -34,6 +34,38 @@ jobs:
           text = text.replace(
               "import androidx.compose.ui.platform.LocalContext\n",
               "import androidx.compose.ui.platform.LocalContext\nimport androidx.compose.ui.platform.LocalFocusManager\nimport androidx.compose.ui.text.input.ImeAction\n"
+          )
+          text = text.replace(
+              '''    fun inviteText(): String? {
+        val s = ui.local
+        if (!AccessPolicy.canShowQr(s)) return null
+        return TeamInvite(
+            teamId = s.teamId ?: return null,
+            teamName = s.teamName ?: "Plakat-Team",
+            leaderName = s.deviceName,
+            leaderDeviceId = s.deviceId,
+            teamSecret = s.teamSecret ?: return null
+        ).encodeForQr()
+    }
+''',
+              '''    fun inviteText(locked: Boolean = false): String? {
+        val s = ui.local
+        if (!AccessPolicy.canShowQr(s)) return null
+        val expiresAt = if (locked) {
+            Instant.now().plus(3650, ChronoUnit.DAYS).toEpochMilli()
+        } else {
+            Instant.now().plusSeconds(TeamInvite.DEFAULT_TTL_SECONDS).toEpochMilli()
+        }
+        return TeamInvite(
+            teamId = s.teamId ?: return null,
+            teamName = s.teamName ?: "Plakat-Team",
+            leaderName = s.deviceName,
+            leaderDeviceId = s.deviceId,
+            teamSecret = s.teamSecret ?: return null,
+            expiresAt = expiresAt
+        ).encodeForQr()
+    }
+'''
           )
           text = text.replace(
               '    var myName by remember { mutableStateOf("") }\n    val scanner = rememberLauncherForActivityResult',
@@ -110,6 +142,65 @@ jobs:
                     Button({ vm.deletePoster(p) }, modifier = Modifier.fillMaxWidth()) { Text("Aus Liste entfernen") }
                     Button({ openNavigation(context, p.latitude, p.longitude, p.addressHint.ifBlank { "Plakat" }) }) {'''
           )
+          text = text.replace(
+              '''        if (AccessPolicy.canShowQr(s)) {
+            item {
+                Divider()
+                Text("Team-QR-Code. Nur du als Teamleiter stellst ihn bereit. Wer ihn scannt, ist direkt im Team. Der QR-Code ist jeweils 10 Minuten gültig.")
+                vm.inviteText()?.let { QrCodeImage(it) }
+            }
+            item { TeamMembersCard(s) }
+        }
+''',
+              '''        if (AccessPolicy.canShowQr(s)) {
+            item { TeamInviteQrCard(vm) }
+            item { TeamMembersCard(s) }
+        }
+'''
+          )
+          text = text.replace(
+              '''@Composable
+fun TeamMembersCard(s: LocalTeamState) {''',
+              '''@Composable
+fun TeamInviteQrCard(vm: PlakatRadarViewModel) {
+    var locked by remember { mutableStateOf(false) }
+    var refreshSeed by remember { mutableStateOf(0) }
+    var remaining by remember { mutableStateOf(TeamInvite.DEFAULT_TTL_SECONDS.toInt()) }
+
+    LaunchedEffect(locked, refreshSeed) {
+        remaining = TeamInvite.DEFAULT_TTL_SECONDS.toInt()
+        if (!locked) {
+            while (remaining > 0) {
+                kotlinx.coroutines.delay(1000)
+                remaining -= 1
+            }
+            refreshSeed += 1
+        }
+    }
+
+    val qrText = remember(locked, refreshSeed, vm.ui.local.teamId, vm.ui.local.teamSecret, vm.ui.local.deviceName) {
+        vm.inviteText(locked)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Divider()
+        Text("Team-QR-Code. Nur du als Teamleiter stellst ihn bereit.")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(if (locked) "🔒 QR bleibt bestehen" else "🔓 Neuer QR in ${remaining}s")
+            Switch(checked = locked, onCheckedChange = { locked = it; refreshSeed += 1 })
+        }
+        Text(if (locked) "Schloss aktiv: Der QR-Code bleibt dauerhaft nutzbar." else "Ohne Schloss ist der QR-Code 1 Minute gültig und aktualisiert sich automatisch.")
+        qrText?.let { QrCodeImage(it) }
+    }
+}
+
+@Composable
+fun TeamMembersCard(s: LocalTeamState) {'''
+          )
 
           main_path.write_text(text, encoding="utf-8")
 
@@ -132,6 +223,14 @@ jobs:
     fun mergeAndSave(local: LocalTeamState, snapshot: SyncSnapshot): LocalTeamState = SyncMerge.merge(local, snapshot).also(::save)'''
           )
           repo_path.write_text(repo_text, encoding="utf-8")
+
+          invite_path = Path("app/src/main/java/de/bsw/plakatradar/core/TeamInvite.kt")
+          invite_text = invite_path.read_text(encoding="utf-8")
+          invite_text = invite_text.replace(
+              "const val DEFAULT_TTL_SECONDS: Long = 10 * 60",
+              "const val DEFAULT_TTL_SECONDS: Long = 60"
+          )
+          invite_path.write_text(invite_text, encoding="utf-8")
           PY
 
       - name: Set up JDK 17
