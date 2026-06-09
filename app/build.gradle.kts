@@ -11,8 +11,8 @@ android {
         applicationId = "de.bsw.plakatradar"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.9.0-agp9-kotlin-fix"
+        versionCode = 10
+        versionName = "0.10.0-location-dependency-fix"
     }
 
     buildFeatures {
@@ -39,7 +39,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
-    implementation("com.google.android.gms:play-services-location:22.3.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.android.gms:play-services-nearby:19.3.0")
 
     implementation("com.google.zxing:core:3.5.4")
