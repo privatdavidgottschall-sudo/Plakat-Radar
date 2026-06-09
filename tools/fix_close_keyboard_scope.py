@@ -96,7 +96,7 @@ fun TeamInviteQrCard(vm: PlakatRadarViewModel) {
 fun TeamMembersCard(s: LocalTeamState) {'''
     )
 
-# Add a floating update button at the bottom right of the dashboard.
+# Add floating update and uninstall/settings buttons to the dashboard.
 if "openUpdatePage(context)" not in text:
     text = text.replace(
         '''    Column(Modifier.fillMaxSize()) {
@@ -124,11 +124,32 @@ if "openUpdatePage(context)" not in text:
             }
         }
         FloatingActionButton(
+            onClick = { openAppSettings(context) },
+            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+        ) { Text("Deinstallieren") }
+        FloatingActionButton(
             onClick = { openUpdatePage(context) },
             modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
         ) { Text("Update") }
     }
 }'''
+    )
+
+# If the update button is already present but the uninstall button is missing, add it next to it.
+if "openUpdatePage(context)" in text and "openAppSettings(context)" not in text:
+    text = text.replace(
+        '''        FloatingActionButton(
+            onClick = { openUpdatePage(context) },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
+        ) { Text("Update") }''',
+        '''        FloatingActionButton(
+            onClick = { openAppSettings(context) },
+            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+        ) { Text("Deinstallieren") }
+        FloatingActionButton(
+            onClick = { openUpdatePage(context) },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
+        ) { Text("Update") }'''
     )
 
 # Add helper that opens the GitHub APK workflow page in the browser.
@@ -147,5 +168,22 @@ if "fun openUpdatePage(context: Context)" not in text:
 fun openNavigation(context: Context, latitude: Double, longitude: Double, label: String) {'''
     )
 
+# Add helper that opens Android app settings. From there Android offers uninstall.
+if "fun openAppSettings(context: Context)" not in text:
+    text = text.replace(
+        '''fun openUpdatePage(context: Context) {''',
+        '''fun openAppSettings(context: Context) {
+    val uri = Uri.parse("package:${context.packageName}")
+    val intent = Intent("android.settings.APPLICATION_DETAILS_SETTINGS", uri)
+    runCatching {
+        context.startActivity(intent)
+    }.onFailure {
+        Toast.makeText(context, "App-Einstellungen konnten nicht geöffnet werden.", Toast.LENGTH_LONG).show()
+    }
+}
+
+fun openUpdatePage(context: Context) {'''
+    )
+
 path.write_text(text, encoding="utf-8")
-print("scope, QR timer and update button fixes applied")
+print("scope, QR timer, update and uninstall buttons applied")
