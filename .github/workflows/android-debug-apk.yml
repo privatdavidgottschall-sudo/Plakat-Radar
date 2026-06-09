@@ -30,9 +30,6 @@ jobs:
       - name: Apply large top navigation
         run: python3 tools/large_top_navigation.py
 
-      - name: Apply start screen uninstall button
-        run: python3 tools/start_screen_uninstall_button.py
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
