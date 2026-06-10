@@ -12,8 +12,8 @@ android {
         applicationId = "de.bsw.plakatradar"
         minSdk = 26
         targetSdk = 35
-        versionCode = 16
-        versionName = "0.10.6-open-sync-file"
+        versionCode = 17
+        versionName = "0.10.7-sync-import-merge-fix"
     }
 
     buildFeatures {
