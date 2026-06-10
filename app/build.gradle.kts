@@ -12,8 +12,8 @@ android {
         applicationId = "de.bsw.plakatradar"
         minSdk = 26
         targetSdk = 35
-        versionCode = 25
-        versionName = "0.10.15-photo-preview-in-list"
+        versionCode = 26
+        versionName = "0.10.16-build-normalizer-fix"
     }
 
     buildFeatures {
@@ -86,7 +86,7 @@ fun PosterListScreen(vm: PlakatRadarViewModel) {
 
 @Composable
 fun NearbyPostersScreen""".trimIndent()
-            fixed = posterListRegex.replace(fixed, posterListWithPhotoPreview)
+            fixed = posterListRegex.replace(fixed, Regex.escapeReplacement(posterListWithPhotoPreview))
 
             if (fixed != original) mainActivity.writeText(fixed)
         }
