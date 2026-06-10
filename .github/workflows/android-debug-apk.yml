@@ -30,10 +30,6 @@ jobs:
       - name: Install Android SDK packages
         run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Disable legacy source normalizer
-        run: |
-          sed -i '/tasks.register("normalizeKeyboardCallbacks")/,$d' app/build.gradle.kts
-
       - name: Build debug APK
         run: sh ./gradlew :app:assembleDebug --stacktrace
 
