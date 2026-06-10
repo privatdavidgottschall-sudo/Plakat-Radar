@@ -31,8 +31,8 @@ object AccessPolicy {
 
     fun canShareSyncBundle(state: LocalTeamState): Boolean = hasTeamAccess(state)
 
-    // Teamleiter und per QR verbundenes Teammitglied dürfen den Stadtverwaltungs-Export teilen.
-    // Eine extra Freischaltung durch den Teamleiter ist dafür nicht nötig.
-    // Offline/no-QR bleibt gesperrt, weil dort kein echter Team-Schlüssel vorhanden ist.
-    fun canExportForAuthority(state: LocalTeamState): Boolean = hasTeamAccess(state) && !isSelfBlocked(state)
+    // Stadtverwaltungs-ZIP darf jeder eingerichtete Nutzer exportieren,
+    // also auch "Ohne QR-Code weiter". Dafür reicht eine lokale Rolle und Team-ID.
+    fun canExportForAuthority(state: LocalTeamState): Boolean =
+        state.role != null && !state.teamId.isNullOrBlank() && !isSelfBlocked(state)
 }
