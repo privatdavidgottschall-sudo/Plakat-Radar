@@ -12,8 +12,8 @@ android {
         applicationId = "de.bsw.plakatradar"
         minSdk = 26
         targetSdk = 35
-        versionCode = 18
-        versionName = "0.10.8-authority-export-refresh-fix"
+        versionCode = 19
+        versionName = "0.10.9-authority-photo-zip-export"
     }
 
     buildFeatures {
@@ -44,12 +44,19 @@ tasks.register("normalizeKeyboardCallbacks") {
             val freshState = repo.load()
             ui = ui.copy(local = freshState)
             if (freshState.posters.isEmpty()) error("Keine Plakate für den Export vorhanden. Bitte erst Plakate erfassen oder Sync-Paket importieren.")
-            val file = File(context.cacheDir, "Plakatliste_${'$'}{municipality}_${'$'}{System.currentTimeMillis()}.csv")
-            file.writeText(OfficialExport.toCsv(freshState, municipality), Charsets.UTF_8)
+            val safeMunicipality = municipality.ifBlank { "Kommune" }.replace(Regex("[^A-Za-z0-9_äöüÄÖÜß-]"), "_")
+            val file = File(context.cacheDir, "Stadtverwaltung_${'$'}{safeMunicipality}_${'$'}{System.currentTimeMillis()}.zip")
+            OfficialExport.writeZip(freshState, municipality, repo.photosDir, file)
             val uri = FileProvider.getUriForFile(context, fileProviderAuthority(), file)
-            val send = Intent(Intent.ACTION_SEND).apply { type = "text/csv"; putExtra(Intent.EXTRA_STREAM, uri); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-            context.startActivity(Intent.createChooser(send, "Plakatliste teilen"))
-            ui = ui.copy(local = freshState, lastLog = "Stadtverwaltungsliste erstellt: ${'$'}{freshState.posters.size} Plakate.")
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "application/zip"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "PlakatRadar Stadtverwaltungs-Export")
+                putExtra(Intent.EXTRA_TEXT, "Stadtverwaltungs-Export mit CSV und Fotos für ${'$'}{municipality.ifBlank { "die Kommune" }}.")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(send, "Stadtverwaltungs-Export teilen"))
+            ui = ui.copy(local = freshState, lastLog = "Stadtverwaltungsexport erstellt: ${'$'}{freshState.posters.size} Plakate, CSV und Fotos im ZIP.")
         }.onFailure { fail(it) }
     }"""
         val oldHelperAnchor = "}\n\ndata class AppUiState("
