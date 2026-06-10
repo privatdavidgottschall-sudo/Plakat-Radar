@@ -12,8 +12,8 @@ android {
         applicationId = "de.bsw.plakatradar"
         minSdk = 26
         targetSdk = 35
-        versionCode = 11
-        versionName = "0.10.1-stable-build"
+        versionCode = 12
+        versionName = "0.10.2-keyboard-callback-fix"
     }
 
     buildFeatures {
@@ -22,6 +22,19 @@ android {
 }
 
 kotlin { jvmToolchain(17) }
+
+tasks.register("normalizeKeyboardCallbacks") {
+    doLast {
+        val mainActivity = file("src/main/java/de/bsw/plakatradar/MainActivity.kt")
+        val oldText = "fun close" + "Keyboard() { focusManager.clearFocus(force = true) }"
+        val newText = "val close" + "Keyboard: () -> Unit = { focusManager.clearFocus(force = true) }"
+        mainActivity.writeText(mainActivity.readText().replace(oldText, newText))
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("normalizeKeyboardCallbacks")
+}
 
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
