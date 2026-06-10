@@ -79,7 +79,11 @@ object OfficialExport {
         }
 
         // UTF-8 BOM helps older Excel versions open German umlauts correctly.
-        return "\uFEFF" + (listOf(header.joinToString(";")) + rows).joinToString("\n")
+        // The sep=; hint tells Excel/LibreOffice that this file uses semicolons,
+        // so headers like "Aktueller Status" are not split at spaces.
+        val separatorHint = "sep=;"
+        val headerLine = header.joinToString(";") { it.csv() }
+        return "\uFEFF" + (listOf(separatorHint, headerLine) + rows).joinToString("\n")
     }
 
     private fun photoEntryName(index: Int, poster: Poster, photosDir: File): String? {
