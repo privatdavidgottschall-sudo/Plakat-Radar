@@ -82,26 +82,20 @@ class LocalRepository(private val context: Context) {
     }
 
     fun addPoster(state: LocalTeamState, poster: Poster): LocalTeamState {
-        val event = PosterEvent(
-            posterId = poster.id,
-            teamId = poster.teamId,
-            actorDeviceId = state.deviceId,
-            actorName = state.deviceName,
-            action = "Plakat erfasst"
-        )
+        val event = PosterEvent(posterId = poster.id, teamId = poster.teamId, actorDeviceId = state.deviceId, actorName = state.deviceName, action = "Plakat erfasst")
         return state.copy(posters = listOf(poster) + state.posters, events = listOf(event) + state.events).also(::save)
     }
 
     fun updateStatus(state: LocalTeamState, poster: Poster, newStatus: PosterStatus): LocalTeamState {
         val changed = poster.copy(status = newStatus, updatedAt = Instant.now().toEpochMilli())
         val updated = state.posters.map { if (it.id == poster.id) changed else it }
-        val event = PosterEvent(
-    posterId = poster.id,
-    teamId = poster.teamId,
-    actorDeviceId = state.deviceId,
-    actorName = state.deviceName,
-    action = "Status geändert zu ${newStatus.name}"
-)
+        val event = PosterEvent(posterId = poster.id, teamId = poster.teamId, actorDeviceId = state.deviceId, actorName = state.deviceName, action = "Status geändert zu ${newStatus.name}")
+        return state.copy(posters = updated, events = listOf(event) + state.events).also(::save)
+    }
+
+    fun deletePoster(state: LocalTeamState, poster: Poster): LocalTeamState {
+        val updated = state.posters.filterNot { it.id == poster.id }
+        val event = PosterEvent(posterId = poster.id, teamId = poster.teamId, actorDeviceId = state.deviceId, actorName = state.deviceName, action = "Plakat aus der Liste entfernt")
         return state.copy(posters = updated, events = listOf(event) + state.events).also(::save)
     }
 
@@ -111,12 +105,7 @@ class LocalRepository(private val context: Context) {
         val teamId = state.teamId ?: error("Kein Team aktiv")
         val teamName = state.teamName ?: "Plakat-Team"
         val secret = state.teamSecret ?: error("Kein Team-Schlüssel")
-        val self = DeviceRecord(
-            deviceId = state.deviceId,
-            displayName = state.deviceName,
-            role = state.role ?: MemberRole.MEMBER,
-            approved = AccessPolicy.isSelfApproved(state)
-        )
+        val self = DeviceRecord(deviceId = state.deviceId, displayName = state.deviceName, role = state.role ?: MemberRole.MEMBER, approved = AccessPolicy.isSelfApproved(state))
         val devices = (state.devices + self).distinctBy { it.deviceId }
         return SyncSnapshot(
             teamId = teamId,
@@ -132,15 +121,7 @@ class LocalRepository(private val context: Context) {
 
     private fun devicesToJson(items: List<DeviceRecord>) = JSONArray().also { arr ->
         items.forEach {
-            arr.put(
-                JSONObject()
-                    .put("deviceId", it.deviceId)
-                    .put("displayName", it.displayName)
-                    .put("role", it.role.name)
-                    .put("joinedAt", it.joinedAt)
-                    .put("approved", it.approved)
-                    .put("blocked", it.blocked)
-            )
+            arr.put(JSONObject().put("deviceId", it.deviceId).put("displayName", it.displayName).put("role", it.role.name).put("joinedAt", it.joinedAt).put("approved", it.approved).put("blocked", it.blocked))
         }
     }
 
@@ -186,16 +167,7 @@ class LocalRepository(private val context: Context) {
 
     private fun eventsToJson(items: List<PosterEvent>) = JSONArray().also { arr ->
         items.forEach { e ->
-            arr.put(
-                JSONObject()
-                    .put("id", e.id)
-                    .put("posterId", e.posterId)
-                    .put("teamId", e.teamId)
-                    .put("actorDeviceId", e.actorDeviceId)
-                    .put("actorName", e.actorName)
-                    .put("action", e.action)
-                    .put("createdAt", e.createdAt)
-            )
+            arr.put(JSONObject().put("id", e.id).put("posterId", e.posterId).put("teamId", e.teamId).put("actorDeviceId", e.actorDeviceId).put("actorName", e.actorName).put("action", e.action).put("createdAt", e.createdAt))
         }
     }
 
@@ -223,10 +195,10 @@ class LocalRepository(private val context: Context) {
             senderDeviceId = root.getString("senderDeviceId"),
             senderName = root.getString("senderName"),
             teamSecretHash = root.getString("teamSecretHash"),
-            devices = devicesFromJson(root.getJSONArray("devices")),
-            posters = postersFromJson(root.getJSONArray("posters")),
-            events = eventsFromJson(root.getJSONArray("events")),
-            createdAt = root.optLong("createdAt")
+            devices = root.optJSONArray("devices")?.let(::devicesFromJson) ?: emptyList(),
+            posters = root.optJSONArray("posters")?.let(::postersFromJson) ?: emptyList(),
+            events = root.optJSONArray("events")?.let(::eventsFromJson) ?: emptyList(),
+            createdAt = root.optLong("createdAt", Instant.now().toEpochMilli())
         )
     }
 }
