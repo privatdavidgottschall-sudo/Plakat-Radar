@@ -12,8 +12,8 @@ android {
         applicationId = "de.bsw.plakatradar"
         minSdk = 26
         targetSdk = 35
-        versionCode = 19
-        versionName = "0.10.9-authority-photo-zip-export"
+        versionCode = 20
+        versionName = "0.10.10-sync-permission-feedback"
     }
 
     buildFeatures {
@@ -139,6 +139,26 @@ fun AppManagementCard(context: Context) {
         }
     }
 }"""
+        val oldSyncConstructor = "sync = NearbySyncManager(context = getApplication(), repo = repo, bundleCodec = codec, onLog = { ui = ui.copy(lastLog = it) }, onIncomingBundle = { file -> importBundle(file) })"
+        val newSyncConstructor = "sync = NearbySyncManager(context = getApplication(), repo = repo, bundleCodec = codec, onLog = ::handleSyncLog, onIncomingBundle = { file -> importBundle(file) })"
+        val oldImportBundleAnchor = "    private fun importBundle(file: File) {"
+        val newImportBundleAnchor = """    private fun handleSyncLog(message: String) {
+        val isPermissionWarning = message.contains("Missing_Permission", ignoreCase = true) ||
+            message.contains("permission", ignoreCase = true) ||
+            message.contains("Berechtigung", ignoreCase = true) ||
+            message.contains("ACCESS_WIFI_STATE", ignoreCase = true) ||
+            message.contains("BLUETOOTH", ignoreCase = true) ||
+            message.contains("NEARBY_WIFI_DEVICES", ignoreCase = true) ||
+            message.contains("ACCESS_FINE_LOCATION", ignoreCase = true)
+        if (isPermissionWarning) {
+            val hint = "Berechtigungswarnung beim lokalen Sync: ${'$'}message\n\nBitte WLAN, Bluetooth, Standort und Geräte in der Nähe aktivieren und in den App-Berechtigungen erlauben. Wenn der Sync danach läuft, war es nur ein kurzer Start-Ruckler."
+            ui = ui.copy(lastLog = hint, error = hint)
+        } else {
+            ui = ui.copy(lastLog = message)
+        }
+    }
+
+    private fun importBundle(file: File) {"""
         var text = mainActivity.readText()
         text = text.replace(oldKeyboard, newKeyboard)
         text = text.replace(oldImportEcho, newImportEcho)
@@ -146,6 +166,8 @@ fun AppManagementCard(context: Context) {
         if (!text.contains("plakatRadarIncomingSyncUri")) text = text.replace(oldHelperAnchor, newHelperAnchor)
         text = text.replace(oldPlakatRadarApp, newPlakatRadarApp)
         text = text.replace(oldAppManagement, newAppManagement)
+        text = text.replace(oldSyncConstructor, newSyncConstructor)
+        if (!text.contains("handleSyncLog(message")) text = text.replace(oldImportBundleAnchor, newImportBundleAnchor)
         mainActivity.writeText(text)
     }
 }
