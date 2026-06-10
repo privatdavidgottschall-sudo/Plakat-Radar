@@ -16,6 +16,9 @@ object AccessPolicy {
         return self.approved && !self.blocked
     }
 
+    fun isSelfBlocked(state: LocalTeamState): Boolean =
+        selfRecord(state)?.blocked == true
+
     fun isDeviceApproved(state: LocalTeamState, deviceId: String): Boolean =
         state.devices.any { it.deviceId == deviceId && it.approved && !it.blocked }
 
@@ -29,6 +32,7 @@ object AccessPolicy {
     fun canShareSyncBundle(state: LocalTeamState): Boolean = hasTeamAccess(state)
 
     // Teamleiter und per QR verbundenes Teammitglied dürfen den Stadtverwaltungs-Export teilen.
+    // Eine extra Freischaltung durch den Teamleiter ist dafür nicht nötig.
     // Offline/no-QR bleibt gesperrt, weil dort kein echter Team-Schlüssel vorhanden ist.
-    fun canExportForAuthority(state: LocalTeamState): Boolean = hasTeamAccess(state) && isSelfApproved(state)
+    fun canExportForAuthority(state: LocalTeamState): Boolean = hasTeamAccess(state) && !isSelfBlocked(state)
 }
