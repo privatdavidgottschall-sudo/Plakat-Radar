@@ -36,7 +36,7 @@ data class TeamInvite(
     }
 
     companion object {
-        const val DEFAULT_TTL_SECONDS: Long = 10 * 60
+        const val DEFAULT_TTL_SECONDS: Long = 60
 
         fun create(teamName: String, leaderName: String, leaderDeviceId: String): TeamInvite = TeamInvite(
             teamId = UUID.randomUUID().toString(),
@@ -62,12 +62,9 @@ data class TeamInvite(
                         teamSecret = parts[6],
                         createdAt = parts[7].toLongOrNull() ?: Instant.now().toEpochMilli(),
                         expiresAt = parts[8].toLongOrNull() ?: 0L
-                    ).also { it.requireStillValid() }
+                    )
                 }
-                "2" -> {
-                    // Alt-QRs ohne Ablauf/Freigabe werden nicht mehr akzeptiert.
-                    error("Dieser alte Team-QR-Code wird nicht mehr unterstützt. Bitte neuen QR-Code vom Teamleiter scannen.")
-                }
+                "2" -> error("Dieser alte Team-QR-Code wird nicht mehr unterstützt. Bitte neuen QR-Code vom Teamleiter scannen.")
                 else -> error("QR-Code-Version wird nicht unterstützt.")
             }
         }
