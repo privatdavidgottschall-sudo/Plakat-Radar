@@ -1,1 +1,1 @@
-Build requested at 2026-06-10 09:45 UTC after stable Gradle and Kotlin cleanup
+Build requested at 2026-06-10 10:03 UTC after keyboard callback compile fix
