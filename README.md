@@ -255,7 +255,7 @@ chmod +x gradlew
 
 ## Build und Tests
 
-Das Projekt baut direkt aus dem Kotlin-Quellcode. Es gibt keine Python-Patch-Skripte, die im GitHub-Workflow zur Build-Zeit Kotlin-Code umschreiben. Der Quellcode im Repository ist die Wahrheit.
+Der GitHub-Workflow baut automatisch eine Debug-APK. Vor dem Build wird aktuell ein kleines Skript ausgefuehrt, das Karten- und Marker-Anpassungen fuer den Testbuild vorbereitet. Fuer lokale Builds mit Android Studio gelten die Kotlin-Dateien im Repository.
 
 Wichtige Befehle:
 
