@@ -42,6 +42,11 @@ Hier sind die wichtigsten Links gesammelt, damit man nicht suchen muss:
 - Ohne-QR-Modus fuer lokale Erfassung und Stadtverwaltungs-Export
 - moderne Dashboard-Navigation mit Start, Erfassen, Liste, Karte und Mehr
 
+## Geplante Features
+
+- Weg-Tracking beim Flyerverteilen: Die App soll spaeter aufzeichnen koennen, welche Strassen beziehungsweise Strassenabschnitte bereits abgelaufen wurden. So kann das Team sehen, wo schon Flyer verteilt wurden und wo noch Luecken sind.
+- Schrittzaehler fuer Flyerverteilung: Ergaenzend zum Weg-Tracking soll ein Schrittzaehler helfen, die gelaufene Strecke beziehungsweise den Einsatz beim Flyern besser einzuschaetzen.
+
 ## Ohne-QR-Modus
 
 Ohne QR-Code kann ein Geraet lokal arbeiten. Das ist praktisch, wenn vor Ort kein Teamleiter anwesend ist.
@@ -279,40 +284,3 @@ Direktlink zum Workflow:
 ```text
 https://github.com/privatdavidgottschall-sudo/Plakat-Radar/actions/workflows/android-debug-apk.yml
 ```
-
-## Wichtige Dateien
-
-```text
-app/src/main/java/de/bsw/plakatradar/MainActivity.kt
-app/src/main/java/de/bsw/plakatradar/core/AccessPolicy.kt
-app/src/main/java/de/bsw/plakatradar/core/TeamInvite.kt
-app/src/main/java/de/bsw/plakatradar/core/SyncMerge.kt
-app/src/main/java/de/bsw/plakatradar/core/SyncBundleCodec.kt
-app/src/main/java/de/bsw/plakatradar/core/OfficialExport.kt
-app/src/main/java/de/bsw/plakatradar/data/LocalRepository.kt
-app/src/main/java/de/bsw/plakatradar/sync/NearbySyncManager.kt
-app/src/test/java/de/bsw/plakatradar/core/AccessPolicyTest.kt
-app/src/test/java/de/bsw/plakatradar/core/SyncMergeTest.kt
-.github/workflows/android-debug-apk.yml
-gradlew
-gradlew.bat
-gradle/wrapper/gradle-wrapper.properties
-```
-
-## Architekturstand
-
-Der aktuelle MVP ist bewusst pragmatisch gebaut. Die naechsten sinnvollen Schritte sind:
-
-- schrittweise MVVM/StateFlow-Struktur
-- weitere Unit-Tests fuer Export, QR-Einladung und Sync-Pakete
-- UI fuer Team-Schluessel-Erneuerung und Geraetesperre
-- Release-Build mit fester Signatur
-- Dokumentation in `docs/` buendeln
-
-## Einschraenkungen
-
-- kein echter Internet-Live-Sync ueber weite Entfernung
-- keine zentrale Benutzerverwaltung
-- OpenStreetMap-Kartenkacheln brauchen Internet, sofern sie nicht gecacht sind
-- GitHub-Actions-APKs sind Debug-/Test-Builds
-- fuer echte Updates ohne Deinstallation ist spaeter eine feste Release-Signatur noetig
